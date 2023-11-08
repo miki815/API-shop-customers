@@ -1,0 +1,22 @@
+CREATE PROCEDURE SP_FINAL_PRICE
+@OrderId int,
+@CurrDate Date
+AS
+BEGIN
+
+DECLARE @ukupnaCena decimal(10, 3)
+DECLARE @IdKupac int
+DECLARE @DodatniPopust int
+
+SELECT @ukupnaCena = SUM(Deo.Kolicina * Art.Cena - Deo.Kolicina * Art.Cena * Pro.Popust / 100)
+FROM DeoPorudzbine Deo JOIN Artikal Art ON Deo.IdArt = Art.IdArt JOIN Prodavnica Pro ON Art.IdKli = Pro.IdKli 
+WHERE Deo.IdPor = @OrderId
+SELECT @IdKupac = IdKli FROM Porudzbina P WHERE P.IdPor = @OrderId
+SELECT @DodatniPopust = COUNT(*) FROM Porudzbina P WHERE P.IdKli = @IdKupac AND P.Cena > 10000 AND P.DatumSlanja > DATEADD(DAY, -30, @CurrDate)
+IF @DodatniPopust > 0 
+BEGIN
+   SET @ukupnaCena = @ukupnaCena * 0.98
+END
+SELECT @ukupnaCena AS Ukupno
+--UPDATE Porudzbina SET Cena = @ukupnaCena WHERE IdPor = @OrderId
+END

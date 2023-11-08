@@ -1,0 +1,26 @@
+CREATE Procedure SP_CRITICAL_CITY
+@orderId int,
+@myCityId int
+AS
+BEGIN
+	declare @putevi table(idG int, minPath int, visited int)
+	declare @cnt int, @distance int
+	declare @tmpCityId int
+	insert into @putevi(idG, minPath, visited) select G.IdGra, 10000, 0 from Grad G
+	update @putevi set minPath = 0, visited = 1 where idG = @myCityId
+	update @putevi set minPath = L.Udaljenost from @putevi inner join Linija L on idG = IdGra1 where IdGra2 = @myCityId
+	update @putevi set minPath = L.Udaljenost from @putevi inner join Linija L on idG = IdGra2 where IdGra1 = @myCityId
+	WHILE 1 = 1
+	BEGIN
+		set @tmpCityId =(select top 1 idG from @Putevi where minPath = (select min(minPath) from @putevi where visited = 0) and visited = 0) 
+		set @distance =(select top 1 minPath from @Putevi where minPath = (select min(minPath) from @putevi where visited = 0) and visited = 0)
+		print(CAST(@tmpCityId as varchar)) --checking
+		update @putevi set minPath = @distance + L.Udaljenost from @putevi join Linija L on idG = IdGra1 where IdGra2 = @tmpCityId and @distance + L.Udaljenost < minPath
+		update @putevi set minPath = @distance + L.Udaljenost from @putevi join Linija L on idG = IdGra2 where IdGra1 = @tmpCityId and @distance + L.Udaljenost < minPath
+		update @putevi set visited = 1 where IdG = @tmpCityId
+		IF (select count(*) from @putevi where visited = 0)  = 0 BREAK
+	END
+	--select * from @putevi
+	select idG, minPath from @putevi where minPath = (select max(minPath) from @putevi where idG in(select K.idGra from Klijent K join Artikal A on A.IdKli=K.IdKli
+	join DeoPorudzbine Deo on Deo.IdArt = A.IdArt where Deo.IdPor = @orderId))
+END

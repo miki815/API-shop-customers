@@ -1,0 +1,41 @@
+CREATE TRIGGER TR_TRANSFER_MONEY_TO_SHOPS
+   ON  Porudzbina
+   AFTER UPDATE
+AS 
+BEGIN
+	Declare @myPor int, @myPro int, @money decimal(10, 3), @arriveDate Date
+	IF UPDATE(Status)
+		BEGIN
+			Declare pCursor CURSOR FOR
+			SELECT i.IdPor FROM inserted i JOIN deleted d ON i.IdPor = d.IdPor
+			WHERE d.Status = 'sent' AND i.Status = 'arrived'
+			OPEN pCursor        
+			FETCH NEXT FROM pCursor INTO @myPor
+			WHILE @@FETCH_STATUS = 0
+			BEGIN
+				SET @arriveDate = (SELECT DatumPrijema FROM Porudzbina P WHERE P.IdPor = @myPor)
+				DECLARE tCursor CURSOR FOR
+				SELECT Pro.IdKli, 0.95 * sum(A.Cena * Deo.kolicina * (100 - popust) / 100)
+				FROM Prodavnica Pro join Artikal A on Pro.IdKli = A.IdKli join DeoPorudzbine Deo on A.IdArt = Deo.IdArt
+					join Porudzbina Por on Deo.IdPor = Por.IdPor
+				WHERE Por.IdPor = @myPor
+				GROUP BY Pro.IdKli
+				OPEN tCursor
+				FETCH NEXT FROM tCursor INTO @myPro, @money
+				WHILE @@FETCH_STATUS = 0
+					BEGIN
+						INSERT INTO Transakcija(Cena, IdPor, IdKli, Vreme) VALUES(@money, @myPor, @myPro, @arriveDate)
+						FETCH NEXT FROM tCursor INTO @myPro, @money
+					END
+        
+				CLOSE tCursor
+				DEALLOCATE tCursor
+				
+				FETCH NEXT FROM pCursor INTO  @myPor
+	
+			END
+			CLOSE pCursor
+		    DEALLOCATE pCursor
+		END
+END
+GO

@@ -1,0 +1,206 @@
+
+CREATE TABLE [Artikal]
+( 
+	[IdArt]              integer  IDENTITY  NOT NULL ,
+	[Cena]               decimal(10,3)  NOT NULL ,
+	[Kolicina]           integer  NULL 
+	CONSTRAINT [Default_Value_340_405345726]
+		 DEFAULT  0,
+	[IdKli]              integer  NOT NULL ,
+	[Naziv]              varchar(100)  NOT NULL 
+)
+go
+
+CREATE TABLE [DeoPorudzbine]
+( 
+	[IdArt]              integer  NOT NULL ,
+	[IdPor]              integer  NOT NULL ,
+	[Kolicina]           integer  NULL ,
+	[IdDeo]              integer  IDENTITY  NOT NULL 
+)
+go
+
+CREATE TABLE [Grad]
+( 
+	[IdGra]              integer  IDENTITY  NOT NULL ,
+	[Naziv]              varchar(100)  NULL 
+)
+go
+
+CREATE TABLE [Klijent]
+( 
+	[IdKli]              integer  IDENTITY  NOT NULL ,
+	[IdGra]              integer  NOT NULL ,
+	[Kredit]             decimal(10,3)  NULL 
+	CONSTRAINT [Default_Value_343_728104472]
+		 DEFAULT  0
+)
+go
+
+CREATE TABLE [Kupac]
+( 
+	[Ime]                varchar(100)  NULL ,
+	[IdKli]              integer  NOT NULL 
+)
+go
+
+CREATE TABLE [Linija]
+( 
+	[Udaljenost]         integer  NULL ,
+	[IdGra1]             integer  NOT NULL ,
+	[IdGra2]             integer  NOT NULL ,
+	[IdLin]              integer  IDENTITY  NOT NULL 
+)
+go
+
+CREATE TABLE [Porudzbina]
+( 
+	[IdPor]              integer  IDENTITY  NOT NULL ,
+	[Status]             varchar(20)  NULL 
+	CONSTRAINT [Default_Value_354_1377317422]
+		 DEFAULT  'created',
+	[Cena]               decimal(10,3)  NULL 
+	CONSTRAINT [Default_Value_356_687073341]
+		 DEFAULT  0,
+	[IdKli]              integer  NOT NULL ,
+	[Lokacija]           integer  NULL ,
+	[DatumSlanja]        datetime  NULL ,
+	[DatumPrijema]       datetime  NULL 
+)
+go
+
+CREATE TABLE [Prodavnica]
+( 
+	[IdKli]              integer  NOT NULL ,
+	[Naziv]              varchar(100)  NULL ,
+	[Popust]             integer  NULL 
+	CONSTRAINT [Default_Value_435_1377639216]
+		 DEFAULT  0
+)
+go
+
+CREATE TABLE [Transakcija]
+( 
+	[IdT]                integer  IDENTITY  NOT NULL ,
+	[Cena]               decimal(10,3)  NULL ,
+	[Vreme]              datetime  NULL ,
+	[IdPor]              integer  NOT NULL ,
+	[IdKli]              integer  NULL 
+)
+go
+
+ALTER TABLE [Artikal]
+	ADD CONSTRAINT [XPKArtikal] PRIMARY KEY  CLUSTERED ([IdArt] ASC)
+go
+
+ALTER TABLE [DeoPorudzbine]
+	ADD CONSTRAINT [XPKDeoPorudzbine] PRIMARY KEY  CLUSTERED ([IdArt] ASC,[IdPor] ASC,[IdDeo] ASC)
+go
+
+ALTER TABLE [Grad]
+	ADD CONSTRAINT [XPKGrad] PRIMARY KEY  CLUSTERED ([IdGra] ASC)
+go
+
+ALTER TABLE [Klijent]
+	ADD CONSTRAINT [XPKKlijent] PRIMARY KEY  CLUSTERED ([IdKli] ASC)
+go
+
+ALTER TABLE [Kupac]
+	ADD CONSTRAINT [XPKKupac] PRIMARY KEY  CLUSTERED ([IdKli] ASC)
+go
+
+ALTER TABLE [Linija]
+	ADD CONSTRAINT [XPKRazdaljina] PRIMARY KEY  CLUSTERED ([IdGra1] ASC,[IdGra2] ASC,[IdLin] ASC)
+go
+
+ALTER TABLE [Porudzbina]
+	ADD CONSTRAINT [XPKPorudzbina] PRIMARY KEY  CLUSTERED ([IdPor] ASC)
+go
+
+ALTER TABLE [Prodavnica]
+	ADD CONSTRAINT [XPKProdavnica] PRIMARY KEY  CLUSTERED ([IdKli] ASC)
+go
+
+ALTER TABLE [Transakcija]
+	ADD CONSTRAINT [XPKTransakcija] PRIMARY KEY  CLUSTERED ([IdT] ASC)
+go
+
+
+ALTER TABLE [Artikal]
+	ADD CONSTRAINT [R_3] FOREIGN KEY ([IdKli]) REFERENCES [Prodavnica]([IdKli])
+		ON DELETE NO ACTION
+		ON UPDATE NO ACTION
+go
+
+
+ALTER TABLE [DeoPorudzbine]
+	ADD CONSTRAINT [R_4] FOREIGN KEY ([IdArt]) REFERENCES [Artikal]([IdArt])
+		ON DELETE NO ACTION
+		ON UPDATE NO ACTION
+go
+
+ALTER TABLE [DeoPorudzbine]
+	ADD CONSTRAINT [R_5] FOREIGN KEY ([IdPor]) REFERENCES [Porudzbina]([IdPor])
+		ON DELETE NO ACTION
+		ON UPDATE NO ACTION
+go
+
+
+ALTER TABLE [Klijent]
+	ADD CONSTRAINT [R_14] FOREIGN KEY ([IdGra]) REFERENCES [Grad]([IdGra])
+		ON DELETE NO ACTION
+		ON UPDATE NO ACTION
+go
+
+
+ALTER TABLE [Kupac]
+	ADD CONSTRAINT [R_12] FOREIGN KEY ([IdKli]) REFERENCES [Klijent]([IdKli])
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
+go
+
+
+ALTER TABLE [Linija]
+	ADD CONSTRAINT [R_8] FOREIGN KEY ([IdGra1]) REFERENCES [Grad]([IdGra])
+		ON DELETE NO ACTION
+		ON UPDATE NO ACTION
+go
+
+ALTER TABLE [Linija]
+	ADD CONSTRAINT [R_9] FOREIGN KEY ([IdGra2]) REFERENCES [Grad]([IdGra])
+		ON DELETE NO ACTION
+		ON UPDATE NO ACTION
+go
+
+
+ALTER TABLE [Porudzbina]
+	ADD CONSTRAINT [R_6] FOREIGN KEY ([IdKli]) REFERENCES [Kupac]([IdKli])
+		ON DELETE NO ACTION
+		ON UPDATE NO ACTION
+go
+
+ALTER TABLE [Porudzbina]
+	ADD CONSTRAINT [R_18] FOREIGN KEY ([Lokacija]) REFERENCES [Grad]([IdGra])
+		ON DELETE NO ACTION
+		ON UPDATE NO ACTION
+go
+
+
+ALTER TABLE [Prodavnica]
+	ADD CONSTRAINT [R_11] FOREIGN KEY ([IdKli]) REFERENCES [Klijent]([IdKli])
+		ON DELETE CASCADE
+		ON UPDATE CASCADE
+go
+
+
+ALTER TABLE [Transakcija]
+	ADD CONSTRAINT [R_15] FOREIGN KEY ([IdPor]) REFERENCES [Porudzbina]([IdPor])
+		ON DELETE NO ACTION
+		ON UPDATE NO ACTION
+go
+
+ALTER TABLE [Transakcija]
+	ADD CONSTRAINT [R_17] FOREIGN KEY ([IdKli]) REFERENCES [Klijent]([IdKli])
+		ON DELETE NO ACTION
+		ON UPDATE NO ACTION
+go

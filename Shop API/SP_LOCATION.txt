@@ -1,0 +1,32 @@
+CREATE Procedure SP_LOCATION
+@idGStart int,
+@orderId int,
+@days int
+AS
+BEGIN
+	declare @putevi table(idG int, minPath int, visited int, lastCity int)
+	declare @cnt int, @distance int, @idGEnd int
+	declare @tmpCityId int
+	set @idGEnd = (select K.IdGra from Klijent K join Porudzbina P on K.IdKli = P.IdKli where P.IdPor = @orderId) 
+	insert into @putevi(idG, minPath, visited, lastCity) select G.IdGra, 10000, 0, -1 from Grad G
+	update @putevi set minPath = 0, visited = 1, lastCity = @idGStart where idG = @idGStart
+	update @putevi set minPath = L.Udaljenost, lastCity = @idGStart from @putevi inner join Linija L on idG = IdGra1 where IdGra2 = @idGStart
+	update @putevi set minPath = L.Udaljenost, lastCity = @idGStart from @putevi inner join Linija L on idG = IdGra2 where IdGra1 = @idGStart
+	WHILE 1 = 1
+	BEGIN
+		set @tmpCityId =(select top 1 idG from @Putevi where minPath = (select min(minPath) from @putevi where visited = 0) and visited = 0) 
+		set @distance =(select top 1 minPath from @Putevi where minPath = (select min(minPath) from @putevi where visited = 0) and visited = 0)
+		print(CAST(@tmpCityId as varchar)) --checking
+		update @putevi set minPath = @distance + L.Udaljenost, lastCity = @tmpCityId from @putevi join Linija L on idG = IdGra1 where IdGra2 = @tmpCityId and @distance + L.Udaljenost < minPath
+		update @putevi set minPath = @distance + L.Udaljenost, lastCity = @tmpCityId from @putevi join Linija L on idG = IdGra2 where IdGra1 = @tmpCityId and @distance + L.Udaljenost < minPath
+		update @putevi set visited = 1 where IdG = @tmpCityId
+		IF (select count(*) from @putevi where visited = 0)  = 0 BREAK
+	END
+	WHILE 1 = 1
+	BEGIN
+		IF(select minPath from @putevi where idG = @idGEnd) <= @days BREAK
+		set @idGEnd = (select lastCity from @putevi where idG = @idGEnd)
+	END
+	--select * from @putevi
+	select idG from @putevi where idG = @idGEnd
+END
